@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   createSourceAccount,
   updateSourceAccount,
+  toggleSourceAccount,
   deactivateSourceAccount,
   deleteSourceAccount,
 } from '@/actions/advances'
@@ -14,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from '@/components/ui/use-toast'
-import { Plus, Pencil, PowerOff, Trash2, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { Plus, Pencil, PowerOff, Power, Trash2, Loader2 } from 'lucide-react'
 
 type Account = {
   id: string
@@ -26,7 +27,7 @@ type Account = {
 
 export function SourceAccountsClient({ accounts: initial }: { accounts: Account[] }) {
   const router = useRouter()
-  const [accounts, setAccounts] = useState(initial)
+  const [accounts] = useState(initial)
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Account | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -63,6 +64,14 @@ export function SourceAccountsClient({ accounts: initial }: { accounts: Account[
     startTransition(async () => {
       await deactivateSourceAccount(id)
       toast({ title: 'Hesap pasife alındı.' })
+      router.refresh()
+    })
+  }
+
+  function handleToggleActive(id: string, currentlyActive: boolean) {
+    startTransition(async () => {
+      await toggleSourceAccount(id)
+      toast({ title: currentlyActive ? 'Hesap pasife alındı.' : 'Hesap aktifleştirildi.' })
       router.refresh()
     })
   }
@@ -147,16 +156,27 @@ export function SourceAccountsClient({ accounts: initial }: { accounts: Account[
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  {acc.isActive && (
+                  {acc.isActive ? (
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-7 w-7 p-0 rounded-lg hover:bg-orange-50 text-orange-500"
-                      onClick={() => handleDeactivate(acc.id)}
+                      onClick={() => handleToggleActive(acc.id, true)}
                       disabled={isPending}
                       title="Pasife Al"
                     >
                       <PowerOff className="h-3.5 w-3.5" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 rounded-lg hover:bg-emerald-50 text-emerald-600"
+                      onClick={() => handleToggleActive(acc.id, false)}
+                      disabled={isPending}
+                      title="Aktifleştir"
+                    >
+                      <Power className="h-3.5 w-3.5" />
                     </Button>
                   )}
                   <Button

@@ -1,11 +1,12 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Search, Command, Plus, FolderOpen, FolderPlus, SendHorizonal } from 'lucide-react'
+import { Search, Command, Plus, UserPlus, FolderPlus, SendHorizonal } from 'lucide-react'
 import Link from 'next/link'
-import { CommandPalette } from '@/components/layout/CommandPalette'
+import { CommandPalette }  from '@/components/layout/CommandPalette'
 import { QuickExpenseModal } from '@/components/dashboard/QuickExpenseModal'
 import { QuickProjectModal } from '@/components/dashboard/QuickProjectModal'
+import { QuickClientModal }  from '@/components/dashboard/QuickClientModal'
 
 interface Props {
   children: React.ReactNode
@@ -16,6 +17,7 @@ export function DashboardShell({ children, isAdmin }: Props) {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [expenseOpen, setExpenseOpen] = useState(false)
   const [projectOpen, setProjectOpen] = useState(false)
+  const [clientOpen,  setClientOpen]  = useState(false)
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -33,6 +35,7 @@ export function DashboardShell({ children, isAdmin }: Props) {
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       <QuickExpenseModal open={expenseOpen} onClose={() => setExpenseOpen(false)} />
       <QuickProjectModal open={projectOpen} onClose={() => setProjectOpen(false)} />
+      <QuickClientModal  open={clientOpen}  onClose={() => setClientOpen(false)} />
 
       <div className="space-y-5">
 
@@ -54,10 +57,7 @@ export function DashboardShell({ children, isAdmin }: Props) {
           </button>
         </div>
 
-        {/* Quick Actions
-            Mobile:  2-column grid, taller touch targets (py-3.5)
-            Desktop: single row flex-wrap, compact (py-2)
-        */}
+        {/* Quick Actions */}
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
           <button
             onClick={() => setExpenseOpen(true)}
@@ -85,13 +85,14 @@ export function DashboardShell({ children, isAdmin }: Props) {
             </Link>
           )}
 
-          <Link
-            href="/clients"
+          {/* Quick Add Client — replaces the old "Müvekkiller" link */}
+          <button
+            onClick={() => setClientOpen(true)}
             className="flex items-center justify-center gap-2 px-4 py-3.5 sm:py-2 bg-white border text-foreground text-[13px] font-medium rounded-xl hover:bg-muted/40 hover:border-primary/20 active:scale-95 transition-all duration-150 shadow-sm"
           >
-            <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span>Müvekkiller</span>
-          </Link>
+            <UserPlus className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span>Müvekkil Ekle</span>
+          </button>
         </div>
 
         {children}
