@@ -1,0 +1,290 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+//
+// Enums
+//
+
+enum Role {
+  ADMIN
+  USER
+}
+
+/// ADVANCE       = client deposits money (IN, increases balance)
+/// EXPENSE        = office spends money  (OUT, decreases balance)
+/// REFUND         = remaining balance returned to client (OUT, decreases balance)
+/// USER_TRANSFER  = legacy  kept for backward compat, use EmployeeAdvanceTransfer instead
+enum TransactionType {
+  ADVANCE
+  EXPENSE
+  REFUND
+  USER_TRANSFER
+}
+
+enum ExpenseCategory {
+  OFFICE
+  TRAVEL
+  COURT_FEES
+  SHIPPING
+  NOTARY
+  TAX
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+}
+
+/// Expense approval workflow status (EXPENSE type only)
+/// Existing records default to APPROVED for backward compatibility
+enum ExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+//
+// Models
+//
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(USER)
+  isActive     Boolean   @default(true)
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  clients              Client[]
+  projects             Project[]
+  transactions         LedgerTransaction[]
+  auditLogs            AuditLog[]
+  receivedTransfers    LedgerTransaction[]          @relation("ReceivedTransfers")
+  advancesReceived     EmployeeAdvanceTransfer[]    @relation("AdvanceReceiver")
+  advancesSent         EmployeeAdvanceTransfer[]    @relation("AdvanceSender")
+  approvedTransactions LedgerTransaction[]          @relation("ApprovedTransactions")
+  notifications        Notification[]
+
+  @@index([email])
+  @@index([isActive])
+  @@index([lastActiveAt])
+}
+
+enum AuditActionType {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum AuditEntityType {
+  CLIENT
+  PROJECT
+  TRANSACTION
+  USER
+  ADVANCE_TRANSFER
+}
+
+model AuditLog {
+  id          String          @id @default(cuid())
+  entityType  AuditEntityType
+  entityId    String
+  actionType  AuditActionType
+  oldValues   Json?
+  newValues   Json?
+  timestamp   DateTime        @default(now())
+
+  performedById String
+  performedBy   User   @relation(fields: [performedById], references: [id])
+
+  @@index([entityType])
+  @@index([entityId])
+  @@index([performedById])
+  @@index([timestamp])
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String?
+  email       String?
+  taxId       String?
+  address     String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  projects     Project[]
+  transactions LedgerTransaction[]
+
+  @@index([createdById])
+  @@index([name])
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  fileNo      String
+  title       String
+  description String?
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  transactions LedgerTransaction[]
+
+  @@unique([clientId, fileNo])
+  @@index([clientId])
+  @@index([createdById])
+}
+
+model LedgerTransaction {
+  id       String          @id @default(cuid())
+  type     TransactionType
+  amount   Decimal         @db.Decimal(18, 4)
+  currency String          @default("TRY")
+  date     DateTime        @db.Date
+
+  category      ExpenseCategory?
+  paymentMethod PaymentMethod?
+  vatIncluded   Boolean? @default(false)
+  vatRate       Int?     @default(0)
+  invoiceNo     String?
+  invoiced      Boolean? @default(false)
+
+  description String?
+  notes       String?
+
+  forceNegative Boolean @default(false)
+
+  /// Approval workflow — only applies to EXPENSE type transactions
+  /// null = legacy record (treat as APPROVED)
+  status         ExpenseStatus? @default(DRAFT)
+  submittedAt    DateTime?
+  approvedAt     DateTime?
+  rejectedAt     DateTime?
+  rejectedReason String?
+  approvedById   String?
+  approvedBy     User?   @relation("ApprovedTransactions", fields: [approvedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clientId String
+  client   Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  receivedById String?
+  receivedBy   User?  @relation("ReceivedTransfers", fields: [receivedById], references: [id])
+
+  attachments Attachment[]
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([createdById])
+  @@index([receivedById])
+  @@index([approvedById])
+  @@index([date])
+  @@index([type])
+  @@index([status])
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  originalName String
+  storageKey   String   @unique
+  mimeType     String
+  sizeBytes    Int
+  createdAt    DateTime @default(now())
+
+  transactionId String
+  transaction   LedgerTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+}
+
+/// Source accounts (cash, bank accounts, etc.) managed by ADMIN
+model SourceAccount {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  advances EmployeeAdvanceTransfer[]
+
+  @@index([isActive])
+}
+
+/// In-app notifications sent to users
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+/// Advance money sent from office to an employee
+/// Balance = SUM(this.amount WHERE receiverId=X) - SUM(LedgerTransaction.amount WHERE createdById=X AND type=EXPENSE)
+model EmployeeAdvanceTransfer {
+  id          String   @id @default(cuid())
+  amount      Decimal  @db.Decimal(18, 4)
+  currency    String   @default("TRY")
+  date        DateTime @db.Date
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  /// Employee who receives the advance
+  receiverId  String
+  receiver    User   @relation("AdvanceReceiver", fields: [receiverId], references: [id])
+
+  /// Admin who sent the advance
+  sentById    String
+  sentBy      User   @relation("AdvanceSender", fields: [sentById], references: [id])
+
+  /// Where the money came from
+  sourceAccountId String?
+  sourceAccount   SourceAccount? @relation(fields: [sourceAccountId], references: [id])
+
+  @@index([receiverId])
+  @@index([sentById])
+  @@index([sourceAccountId])
+  @@index([date])
+}

@@ -1,0 +1,124 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Off-white page background — warm tint like Stripe/Linear */
+    --background: 220 20% 97%;
+    --foreground: 220 25% 10%;
+
+    /* Pure white cards */
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 10%;
+
+    /* Primary: deep indigo-slate (professional) */
+    --primary: 226 57% 21%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 220 16% 94%;
+    --secondary-foreground: 220 25% 20%;
+
+    --muted: 220 16% 95%;
+    --muted-foreground: 220 10% 50%;
+
+    --accent: 220 16% 92%;
+    --accent-foreground: 220 25% 12%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Subtle borders */
+    --border: 220 18% 90%;
+    --input: 220 18% 90%;
+    --ring: 226 57% 21%;
+    --radius: 0.625rem;
+
+    /* Custom tokens for sidebar */
+    --sidebar-bg: 226 30% 14%;
+    --sidebar-fg: 220 20% 75%;
+    --sidebar-active-bg: 226 40% 22%;
+    --sidebar-active-fg: 0 0% 100%;
+    --sidebar-hover-bg: 226 30% 18%;
+    --sidebar-border: 226 25% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1, "cv02" 1, "cv03" 1, "cv04" 1;
+  }
+}
+
+/* Smooth scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(220 18% 82%);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 18% 70%);
+}
+
+/* Card shadow utility */
+.card-shadow {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+}
+.card-shadow-md {
+  box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+}
+
+/* ── Print: hide chrome, show only document ── */
+@media print {
+  /* Hide navigation chrome */
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset layout: no sidebar flex */
+  body > div,
+  .flex.h-screen {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Document paper margins */
+  @page {
+    margin: 16mm 20mm;
+    size: A4;
+  }
+
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Prevent orphaned rows */
+  table { page-break-inside: auto; }
+  tr    { page-break-inside: avoid; page-break-after: auto; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+}
