@@ -3,13 +3,11 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Loader2, AlertCircle } from 'lucide-react'
 
 export function LoginForm() {
-  const router = useRouter()
-  const [error, setError] = useState('')
+  const router  = useRouter()
+  const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -17,9 +15,9 @@ export function LoginForm() {
     setError('')
     setLoading(true)
 
-    const fd = new FormData(e.currentTarget)
+    const fd     = new FormData(e.currentTarget)
     const result = await signIn('credentials', {
-      email: fd.get('email'),
+      email:    fd.get('email'),
       password: fd.get('password'),
       redirect: false,
     })
@@ -35,22 +33,58 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+
       {error && (
-        <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-          {error}
+        <div className="flex items-center gap-2.5 rounded-xl px-3.5 py-3 bg-red-50 border border-red-200">
+          <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+          <p className="text-[13px] text-red-700">{error}</p>
         </div>
       )}
-      <div className="space-y-2">
-        <Label htmlFor="email">E-posta</Label>
-        <Input id="email" name="email" type="email" placeholder="admin@office.local" required />
+
+      <div className="space-y-1.5">
+        <label htmlFor="email" className="block text-[12px] font-medium text-foreground">
+          E-posta
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="ad@buro.com"
+          className="w-full h-9 rounded-xl border border-border bg-white px-3 text-[13px] text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
+          disabled={loading}
+        />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Şifre</Label>
-        <Input id="password" name="password" type="password" placeholder="••••••••" required />
+
+      <div className="space-y-1.5">
+        <label htmlFor="password" className="block text-[12px] font-medium text-foreground">
+          Şifre
+        </label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          autoComplete="current-password"
+          placeholder="••••••••"
+          className="w-full h-9 rounded-xl border border-border bg-white px-3 text-[13px] text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
+          disabled={loading}
+        />
       </div>
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
-      </Button>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full h-9 rounded-xl bg-foreground text-background text-[13px] font-medium flex items-center justify-center gap-2 hover:opacity-85 active:scale-[0.98] transition-all duration-150 disabled:opacity-60 mt-2"
+      >
+        {loading ? (
+          <><Loader2 className="h-4 w-4 animate-spin" /> Giriş yapılıyor…</>
+        ) : (
+          'Giriş Yap'
+        )}
+      </button>
+
     </form>
   )
 }

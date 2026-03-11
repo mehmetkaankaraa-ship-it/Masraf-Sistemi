@@ -56,9 +56,11 @@ export default async function ProjectDetailPage({
             </div>
             <div>
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {project.fileNo}
-                </span>
+                {!/^PRJ-\d{8}-\d{6}$/.test(project.fileNo) && (
+                  <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {project.fileNo}
+                  </span>
+                )}
                 {project.closedAt && (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
                     <Lock className="h-2.5 w-2.5" /> Kapalı
