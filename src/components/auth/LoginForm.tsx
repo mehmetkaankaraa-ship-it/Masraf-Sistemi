@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, ArrowRight } from 'lucide-react'
 
 export function LoginForm() {
-  const router  = useRouter()
+  const router            = useRouter()
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
+  // ── Auth logic — untouched ─────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
@@ -30,20 +31,23 @@ export function LoginForm() {
       router.refresh()
     }
   }
+  // ──────────────────────────────────────────────────────────────────
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
 
+      {/* Error banner */}
       {error && (
-        <div className="flex items-center gap-2.5 rounded-xl px-3.5 py-3 bg-red-50 border border-red-200">
-          <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
-          <p className="text-[13px] text-red-700">{error}</p>
+        <div className="flex items-start gap-2.5 rounded-xl px-3.5 py-3 bg-red-50 border border-red-200/80">
+          <AlertCircle className="h-[15px] w-[15px] text-red-500 shrink-0 mt-px" />
+          <p className="text-[12.5px] text-red-700 leading-snug">{error}</p>
         </div>
       )}
 
+      {/* Email */}
       <div className="space-y-1.5">
-        <label htmlFor="email" className="block text-[12px] font-medium text-foreground">
-          E-posta
+        <label htmlFor="email" className="block text-[12px] font-medium text-zinc-700">
+          E-posta adresi
         </label>
         <input
           id="email"
@@ -51,16 +55,27 @@ export function LoginForm() {
           type="email"
           required
           autoComplete="email"
+          autoFocus
           placeholder="ad@buro.com"
-          className="w-full h-9 rounded-xl border border-border bg-white px-3 text-[13px] text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
           disabled={loading}
+          className={[
+            'w-full h-10 rounded-xl px-3.5 text-[13px] bg-zinc-50',
+            'border border-zinc-200 text-zinc-900',
+            'placeholder:text-zinc-400',
+            'outline-none transition-all duration-150',
+            'focus:bg-white focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+          ].join(' ')}
         />
       </div>
 
+      {/* Password */}
       <div className="space-y-1.5">
-        <label htmlFor="password" className="block text-[12px] font-medium text-foreground">
-          Şifre
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="password" className="block text-[12px] font-medium text-zinc-700">
+            Şifre
+          </label>
+        </div>
         <input
           id="password"
           name="password"
@@ -68,20 +83,42 @@ export function LoginForm() {
           required
           autoComplete="current-password"
           placeholder="••••••••"
-          className="w-full h-9 rounded-xl border border-border bg-white px-3 text-[13px] text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
           disabled={loading}
+          className={[
+            'w-full h-10 rounded-xl px-3.5 text-[13px] bg-zinc-50',
+            'border border-zinc-200 text-zinc-900',
+            'placeholder:text-zinc-400',
+            'outline-none transition-all duration-150',
+            'focus:bg-white focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+          ].join(' ')}
         />
       </div>
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-9 rounded-xl bg-foreground text-background text-[13px] font-medium flex items-center justify-center gap-2 hover:opacity-85 active:scale-[0.98] transition-all duration-150 disabled:opacity-60 mt-2"
+        className={[
+          'relative w-full h-10 rounded-xl text-[13px] font-medium',
+          'bg-zinc-900 text-white',
+          'flex items-center justify-center gap-2',
+          'transition-all duration-150',
+          'hover:bg-zinc-800 active:scale-[0.98]',
+          'disabled:opacity-60 disabled:cursor-not-allowed',
+          'shadow-[0_1px_2px_rgba(0,0,0,0.15),0_1px_0_rgba(255,255,255,0.06)_inset]',
+        ].join(' ')}
       >
         {loading ? (
-          <><Loader2 className="h-4 w-4 animate-spin" /> Giriş yapılıyor…</>
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Giriş yapılıyor…</span>
+          </>
         ) : (
-          'Giriş Yap'
+          <>
+            <span>Giriş Yap</span>
+            <ArrowRight className="h-3.5 w-3.5 opacity-70" />
+          </>
         )}
       </button>
 

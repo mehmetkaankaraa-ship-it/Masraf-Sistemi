@@ -1,56 +1,75 @@
 // src/app/(auth)/login/page.tsx
 import { LoginForm } from '@/components/auth/LoginForm'
-import { Scale, Shield } from 'lucide-react'
+import { Scale } from 'lucide-react'
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fafafa] px-4">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#f9fafb] px-4 py-12">
 
-      {/* Subtle dot grid */}
+      {/* ── Background blobs ──────────────────────────────────────────── */}
       <div
-        className="fixed inset-0 pointer-events-none"
+        aria-hidden
+        className="pointer-events-none fixed inset-0"
         style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, hsl(220 13% 91%) 1px, transparent 0)',
-          backgroundSize: '28px 28px',
-          opacity: 0.6,
+          background:
+            'radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.07) 0%, transparent 60%),' +
+            'radial-gradient(ellipse 60% 40% at 80% 110%, rgba(14,165,233,0.06) 0%, transparent 60%)',
         }}
       />
 
-      {/* Card wrapper */}
-      <div className="relative w-full max-w-[380px]">
+      {/* ── Subtle dot grid ───────────────────────────────────────────── */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
+      />
 
-        {/* Logo + Brand */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-foreground flex items-center justify-center mb-4 shadow-sm">
-            <Scale className="h-6 w-6 text-background" />
+      {/* ── Card wrapper ──────────────────────────────────────────────── */}
+      <div className="relative z-10 w-full max-w-[400px]">
+
+        {/* Brand */}
+        <div className="flex flex-col items-center text-center mb-8 select-none">
+          <div className="w-11 h-11 rounded-[14px] bg-zinc-900 flex items-center justify-center mb-4 shadow-md">
+            <Scale className="h-5 w-5 text-white" />
           </div>
-          <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
+          <h1 className="text-[20px] font-semibold tracking-[-0.3px] text-zinc-900">
             Masraf Ledger
           </h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
-            Hukuk bürosu gider yönetimi
+          <p className="text-[12.5px] text-zinc-500 mt-1 leading-relaxed max-w-[260px]">
+            Modern hukuk büroları için profesyonel gider yönetimi
           </p>
         </div>
 
         {/* Login card */}
-        <div className="bg-white rounded-2xl border border-border/60 shadow-[0_2px_16px_rgba(0,0,0,0.06)] p-7">
-          <div className="mb-6">
-            <h2 className="text-[15px] font-semibold text-foreground">Giriş Yap</h2>
-            <p className="text-[12px] text-muted-foreground mt-0.5">
-              Hesabınıza erişmek için bilgilerinizi girin.
+        <div
+          className="bg-white rounded-[20px] p-8"
+          style={{
+            border: '1px solid rgba(0,0,0,0.08)',
+            boxShadow:
+              '0 1px 2px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04), 0 16px 32px rgba(0,0,0,0.05)',
+          }}
+        >
+          {/* Card heading */}
+          <div className="mb-7">
+            <h2 className="text-[16px] font-semibold text-zinc-900 tracking-[-0.2px]">
+              Hesabınıza giriş yapın
+            </h2>
+            <p className="text-[12.5px] text-zinc-500 mt-1">
+              Devam etmek için e-posta ve şifrenizi girin.
             </p>
           </div>
 
           <LoginForm />
         </div>
 
-        {/* Security footer */}
-        <div className="flex items-center justify-center gap-1.5 mt-5">
-          <Shield className="h-3 w-3 text-muted-foreground/50" />
-          <p className="text-[11px] text-muted-foreground/50 select-none">
-            Güvenli erişim · Yalnızca yetkili personel
-          </p>
-        </div>
+        {/* Footer */}
+        <p className="text-center text-[11px] text-zinc-400 mt-6 select-none">
+          © {new Date().getFullYear()} Masraf Ledger · Yalnızca yetkili personel
+        </p>
 
       </div>
     </div>
