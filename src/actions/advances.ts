@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { requireCurrentUser } from '@/lib/current-user'
 import { requireRole } from '@/lib/session'
 import { Decimal } from '@prisma/client/runtime/library'
+import type { Prisma } from '@prisma/client'
 import { z } from 'zod'
 import type { ActionResult } from './clients'
 
@@ -35,7 +36,7 @@ const sourceAccountSchema = z.object({
 // -----------------------------------------------------------------------------
 
 export async function getEmployeeBalance(employeeId: string) {
-  const [transfers, expenses] = await Promise.all([
+  const [transfers, expenses, returns] = await Promise.all([
     prisma.employeeAdvanceTransfer.aggregate({
       where: { receiverId: employeeId },
       _sum: { amount: true },
@@ -44,15 +45,21 @@ export async function getEmployeeBalance(employeeId: string) {
       where: { createdById: employeeId, type: 'EXPENSE' },
       _sum: { amount: true },
     }),
+    prisma.advanceReturn.aggregate({
+      where: { employeeId },
+      _sum: { amount: true },
+    }),
   ])
 
-  const totalTransferred = transfers._sum.amount ?? new Decimal(0)
-  const totalExpenses = expenses._sum.amount ?? new Decimal(0)
-  const remaining = new Decimal(totalTransferred).sub(new Decimal(totalExpenses))
+  const totalTransferred = new Decimal(transfers._sum.amount ?? 0)
+  const totalExpenses    = new Decimal(expenses._sum.amount ?? 0)
+  const totalReturned    = new Decimal(returns._sum.amount ?? 0)
+  const remaining        = totalTransferred.sub(totalExpenses).sub(totalReturned)
 
   return {
-    totalTransferred: new Decimal(totalTransferred),
-    totalExpenses: new Decimal(totalExpenses),
+    totalTransferred,
+    totalExpenses,
+    totalReturned,
     remaining,
   }
 }
@@ -169,11 +176,28 @@ export async function createEmployeeAdvanceTransfer(
 // Admin: get all employee summaries
 // -----------------------------------------------------------------------------
 
-export async function getAllEmployeeSummaries() {
+export async function getAllEmployeeSummaries(options?: {
+  filter?: 'active' | 'inactive' | 'all'
+  search?: string
+}) {
   await requireRole('ADMIN')
 
+  const where: Prisma.UserWhereInput = {}
+
+  if (options?.filter === 'active')   where.isActive = true
+  if (options?.filter === 'inactive') where.isActive = false
+
+  if (options?.search?.trim()) {
+    const q = options.search.trim()
+    where.OR = [
+      { name:  { contains: q, mode: 'insensitive' } },
+      { email: { contains: q, mode: 'insensitive' } },
+    ]
+  }
+
   const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, isActive: true, lastActiveAt: true, createdAt: true },
+    where,
+    select: { id: true, name: true, email: true, role: true, isActive: true, deactivatedAt: true, lastActiveAt: true, createdAt: true },
     orderBy: { name: 'asc' },
   })
 
@@ -207,7 +231,7 @@ export async function getEmployeeDetail(employeeId: string) {
 
   if (!user) return null
 
-  const [transfers, expenses, balance] = await Promise.all([
+  const [transfers, expenses, advanceReturns, balance] = await Promise.all([
     prisma.employeeAdvanceTransfer.findMany({
       where: { receiverId: employeeId },
       orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
@@ -232,6 +256,18 @@ export async function getEmployeeDetail(employeeId: string) {
         createdAt: true,
         client: { select: { id: true, name: true } },
         project: { select: { id: true, title: true } },
+      },
+    }),
+    prisma.advanceReturn.findMany({
+      where: { employeeId },
+      orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+      select: {
+        id: true,
+        amount: true,
+        date: true,
+        note: true,
+        createdAt: true,
+        recordedBy: { select: { id: true, name: true } },
       },
     }),
     getEmployeeBalance(employeeId),
@@ -263,7 +299,7 @@ export async function getEmployeeDetail(employeeId: string) {
     b.amount.cmp(a.amount),
   )
 
-  return { user, transfers, expenses, balance, clientBreakdown }
+  return { user, transfers, expenses, advanceReturns, balance, clientBreakdown }
 }
 
 // -----------------------------------------------------------------------------
@@ -369,4 +405,56 @@ export async function deleteSourceAccount(
   revalidatePath('/admin/accounts')
 
   return { success: true, data: { id } }
+}
+
+// -----------------------------------------------------------------------------
+// Admin: record an advance return from an employee
+// -----------------------------------------------------------------------------
+
+const advanceReturnSchema = z.object({
+  employeeId: z.string().cuid('Geçersiz çalışan seçimi.'),
+  amount: z
+    .union([z.string(), z.number()])
+    .transform((v) => (typeof v === 'string' ? Number(v) : v))
+    .refine((n) => Number.isFinite(n) && n > 0, 'Tutar geçersiz.'),
+  date: z.string().min(1, 'Tarih zorunlu.'),
+  note: z.string().optional(),
+})
+
+export async function createAdvanceReturn(
+  raw: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const me = await requireCurrentUser()
+  if (me.role !== 'ADMIN') {
+    return { success: false, error: 'Bu işlem için admin yetkisi gereklidir.' }
+  }
+
+  const parsed = advanceReturnSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.errors[0].message }
+  }
+
+  const { employeeId, amount, date, note } = parsed.data
+
+  const employee = await prisma.user.findUnique({ where: { id: employeeId } })
+  if (!employee) {
+    return { success: false, error: 'Çalışan bulunamadı.' }
+  }
+
+  const record = await prisma.advanceReturn.create({
+    data: {
+      amount:      new Decimal(amount),
+      date:        new Date(date),
+      note:        note ?? null,
+      employeeId,
+      recordedById: me.id,
+    },
+  })
+
+  revalidatePath('/dashboard')
+  revalidatePath('/advances')
+  revalidatePath(`/admin/users/${employeeId}`)
+  revalidatePath('/admin/users')
+
+  return { success: true, data: { id: record.id } }
 }

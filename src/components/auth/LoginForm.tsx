@@ -25,7 +25,11 @@ export function LoginForm() {
 
     setLoading(false)
     if (result?.error) {
-      setError('E-posta veya şifre hatalı.')
+      if (result.error === 'CallbackRouteError') {
+        setError('Hesabınız devre dışı bırakılmıştır. Yöneticinizle iletişime geçin.')
+      } else {
+        setError('E-posta veya şifre hatalı.')
+      }
     } else {
       router.push('/dashboard')
       router.refresh()

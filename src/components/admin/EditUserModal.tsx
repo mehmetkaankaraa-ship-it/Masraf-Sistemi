@@ -2,14 +2,14 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateUser, deleteUser, toggleUserActive } from '@/actions/admin'
+import { updateUser, toggleUserActive } from '@/actions/admin'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/components/ui/use-toast'
-import { Pencil, Eye, EyeOff, Loader2, Trash2, PowerOff, Power } from 'lucide-react'
+import { Pencil, Eye, EyeOff, Loader2, PowerOff, Power } from 'lucide-react'
 
 type UserRow = {
   id: string
@@ -26,8 +26,6 @@ export function EditUserModal({ user }: { user: UserRow }) {
   const [isPending, startTransition] = useTransition()
   const [role, setRole] = useState<'USER' | 'ADMIN'>(user.role)
   const [showPassword, setShowPassword] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
@@ -65,24 +63,8 @@ export function EditUserModal({ user }: { user: UserRow }) {
     })
   }
 
-  function handleDelete() {
-    if (!confirmDelete) { setConfirmDelete(true); return }
-    setError('')
-    startTransition(async () => {
-      const res = await deleteUser(user.id)
-      if (!res.success) {
-        setError(res.error)
-        setConfirmDelete(false)
-      } else {
-        toast({ title: 'Kullanıcı silindi.' })
-        setOpen(false)
-        router.refresh()
-      }
-    })
-  }
-
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); setError(''); setConfirmDelete(false) }}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); setError('') }}>
       <DialogTrigger asChild>
         <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors">
           <Pencil className="h-3.5 w-3.5" />
@@ -174,20 +156,6 @@ export function EditUserModal({ user }: { user: UserRow }) {
               <><PowerOff className="h-3.5 w-3.5" />Hesabı Devre Dışı Bırak</>
             ) : (
               <><Power className="h-3.5 w-3.5" />Hesabı Aktifleştir</>
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant={confirmDelete ? 'destructive' : 'outline'}
-            size="sm"
-            disabled={isPending}
-            onClick={handleDelete}
-            className="w-full rounded-xl gap-2"
-          >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <><Trash2 className="h-3.5 w-3.5" />{confirmDelete ? 'Emin misiniz? Tekrar tıklayın.' : 'Kullanıcıyı Sil'}</>
             )}
           </Button>
         </div>
