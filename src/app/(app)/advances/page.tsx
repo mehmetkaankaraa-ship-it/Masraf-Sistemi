@@ -4,8 +4,10 @@ import { getMyAdvanceBalance, getMyRecentTransfers, getAllEmployeeSummaries } fr
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Decimal } from '@prisma/client/runtime/library'
-import { Banknote, ArrowUpRight, Users, ChevronRight } from 'lucide-react'
-import { redirect } from 'next/navigation'
+import { Banknote, ArrowUpRight, Users } from 'lucide-react'
+
+import { SendAdvanceModal }         from '@/components/advances/SendAdvanceModal'
+import { RecordAdvanceReturnModal } from '@/components/advances/RecordAdvanceReturnModal'
 
 function fmt(v: Decimal | number) {
   const n = v instanceof Decimal ? v.toNumber() : Number(v)
@@ -40,7 +42,7 @@ async function AdminAdvances() {
     }),
   ])
 
-  const staff = summaries.filter((s) => s.role !== 'ADMIN')
+  const staff = summaries.filter((s) => s.role !== 'ADMIN' && s.isActive)
   const totalSent = allTransfers.reduce((sum, t) => {
     const n = t.amount instanceof Decimal ? t.amount.toNumber() : Number(t.amount)
     return sum + n
@@ -73,26 +75,26 @@ async function AdminAdvances() {
             {staff.map((s) => {
               const rem = s.remaining.toNumber()
               return (
-                <Link
-                  key={s.id}
-                  href={`/admin/users/${s.id}`}
-                  className="flex items-center justify-between px-5 py-3 hover:bg-muted/10 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
+                <div key={s.id} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/10 transition-colors">
+
+                  {/* Ad / e-posta (tıklanabilir kısım) */}
+                  <Link href={`/admin/users/${s.id}`} className="flex items-center gap-3 flex-1 min-w-0 group">
                     <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                       <span className="text-[10px] font-bold text-primary">{s.name.slice(0, 1)}</span>
                     </div>
-                    <div>
-                      <p className="text-[13px] font-medium text-foreground">{s.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{s.email}</p>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-foreground group-hover:text-primary transition-colors truncate">{s.name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{s.email}</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-right hidden sm:block">
+                  </Link>
+
+                  {/* Finansal özet */}
+                  <div className="hidden md:flex items-center gap-4 shrink-0">
+                    <div className="text-right">
                       <p className="text-[10px] text-muted-foreground">Alınan</p>
                       <p className="text-[12px] font-medium text-violet-600 tabular-nums">{fmt(s.totalTransferred)}</p>
                     </div>
-                    <div className="text-right hidden sm:block">
+                    <div className="text-right">
                       <p className="text-[10px] text-muted-foreground">Harcama</p>
                       <p className="text-[12px] font-medium text-orange-600 tabular-nums">{fmt(s.totalExpenses)}</p>
                     </div>
@@ -100,9 +102,15 @@ async function AdminAdvances() {
                       <p className="text-[10px] text-muted-foreground">Kalan</p>
                       <p className={`text-[13px] font-bold tabular-nums ${rem >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{fmt(s.remaining)}</p>
                     </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                   </div>
-                </Link>
+
+                  {/* Aksiyon butonları */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <RecordAdvanceReturnModal employeeId={s.id} employeeName={s.name} />
+                    <SendAdvanceModal employeeId={s.id} employeeName={s.name} />
+                  </div>
+
+                </div>
               )
             })}
           </div>

@@ -146,9 +146,13 @@ export async function toggleUserActive(id: string): Promise<CreateUserResult> {
     }
   }
 
+  const nowDeactivating = existing.isActive
   const updated = await prisma.user.update({
     where: { id },
-    data: { isActive: !existing.isActive },
+    data: {
+      isActive:      !existing.isActive,
+      deactivatedAt: nowDeactivating ? new Date() : null,
+    },
     select: { id: true },
   })
 
