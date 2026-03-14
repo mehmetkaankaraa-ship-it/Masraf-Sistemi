@@ -49,6 +49,12 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // Brand tokens
+        'gold-accent': 'hsl(var(--gold-accent))',
+        'primary-light': 'hsl(var(--primary-light))',
+        'brand-navy': '#0A0F2C',
+        'brand-blue': '#1A6BFF',
+        'brand-ice': '#F4F6FF',
       },
       borderRadius: {
         lg: 'var(--radius)',
