@@ -1,4 +1,6 @@
 // src/app/(app)/advances/page.tsx
+export const dynamic = 'force-dynamic'
+
 import { requireCurrentUser } from '@/lib/current-user'
 import { getMyAdvanceBalance, getMyRecentTransfers, getAllEmployeeSummaries } from '@/actions/advances'
 import { prisma } from '@/lib/prisma'
@@ -8,6 +10,8 @@ import { Banknote, ArrowUpRight, Users } from 'lucide-react'
 
 import { SendAdvanceModal }         from '@/components/advances/SendAdvanceModal'
 import { RecordAdvanceReturnModal } from '@/components/advances/RecordAdvanceReturnModal'
+import { DeleteAdvanceButton }      from '@/components/advances/DeleteAdvanceButton'
+import { EditAdvanceButton }        from '@/components/advances/EditAdvanceButton'
 
 function fmt(v: Decimal | number) {
   const n = v instanceof Decimal ? v.toNumber() : Number(v)
@@ -135,8 +139,8 @@ async function AdminAdvances() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/20">
-                  {['Tarih', 'Alıcı', 'Kaynak Hesap', 'Not', 'Tutar'].map((h, i, arr) => (
-                    <th key={h} className={`px-4 py-2.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap ${i === arr.length - 1 ? 'text-right' : 'text-left'}`}>
+                  {['Tarih', 'Alıcı', 'Kaynak Hesap', 'Not', 'Tutar', ''].map((h, i, arr) => (
+                    <th key={i} className={`px-4 py-2.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap ${i === arr.length - 2 ? 'text-right' : 'text-left'}`}>
                       {h}
                     </th>
                   ))}
@@ -159,6 +163,22 @@ async function AdminAdvances() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="text-[13px] font-semibold text-emerald-600 tabular-nums">+{fmt(t.amount)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <EditAdvanceButton
+                          id={t.id}
+                          defaultAmount={t.amount instanceof Decimal ? t.amount.toNumber() : Number(t.amount)}
+                          defaultDate={new Date(t.date).toISOString().split('T')[0]}
+                          defaultNote={t.note}
+                          defaultSourceAccountId={t.sourceAccount?.id ?? null}
+                        />
+                        <DeleteAdvanceButton
+                          id={t.id}
+                          receiverName={t.receiver.name}
+                          amount={fmt(t.amount)}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

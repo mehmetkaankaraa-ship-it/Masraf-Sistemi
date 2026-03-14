@@ -9,6 +9,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 import type { Prisma } from '@prisma/client'
 import { z } from 'zod'
 import type { ActionResult } from './clients'
+import { logAudit } from '@/lib/audit'
 
 // -----------------------------------------------------------------------------
 // Schemas
@@ -420,6 +421,111 @@ const advanceReturnSchema = z.object({
   date: z.string().min(1, 'Tarih zorunlu.'),
   note: z.string().optional(),
 })
+
+// -----------------------------------------------------------------------------
+// Admin: update an advance transfer
+// -----------------------------------------------------------------------------
+
+const updateTransferSchema = z.object({
+  amount: z
+    .union([z.string(), z.number()])
+    .transform((v) => (typeof v === 'string' ? Number(v) : v))
+    .refine((n) => Number.isFinite(n) && n > 0, 'Tutar geçersiz.'),
+  date: z.string().min(1, 'Tarih zorunlu.'),
+  note: z.string().optional().nullable(),
+  sourceAccountId: z.string().optional().nullable(),
+})
+
+export async function updateAdvance(
+  id: string,
+  raw: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const me = await requireCurrentUser()
+  if (me.role !== 'ADMIN') {
+    return { success: false, error: 'Bu işlem için admin yetkisi gereklidir.' }
+  }
+
+  const parsed = updateTransferSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.errors[0].message }
+  }
+
+  const existing = await prisma.employeeAdvanceTransfer.findUnique({
+    where: { id },
+    select: { id: true, receiverId: true, amount: true, date: true, note: true, sourceAccountId: true },
+  })
+  if (!existing) return { success: false, error: 'Transfer bulunamadı.' }
+
+  const { amount, date, note, sourceAccountId } = parsed.data
+
+  await prisma.employeeAdvanceTransfer.update({
+    where: { id },
+    data: {
+      amount: new Decimal(amount),
+      date: new Date(date),
+      note: note ?? null,
+      sourceAccountId: sourceAccountId || null,
+    },
+  })
+
+  await logAudit({
+    entityType: 'ADVANCE_TRANSFER',
+    entityId: id,
+    actionType: 'UPDATE',
+    oldValues: { amount: existing.amount, date: existing.date, note: existing.note, sourceAccountId: existing.sourceAccountId },
+    newValues: { amount, date, note, sourceAccountId },
+    performedById: me.id,
+  })
+
+  revalidatePath('/advances')
+  revalidatePath(`/admin/users/${existing.receiverId}`)
+  revalidatePath('/admin/users')
+
+  return { success: true, data: { id } }
+}
+
+// -----------------------------------------------------------------------------
+// Admin: delete an advance transfer
+// -----------------------------------------------------------------------------
+
+export async function deleteAdvance(id: string): Promise<ActionResult<{ id: string }>> {
+  const me = await requireCurrentUser()
+  if (me.role !== 'ADMIN') {
+    return { success: false, error: 'Bu işlem için admin yetkisi gereklidir.' }
+  }
+
+  const transfer = await prisma.employeeAdvanceTransfer.findUnique({
+    where: { id },
+    select: { id: true, amount: true, date: true, note: true, receiverId: true, sentById: true, sourceAccountId: true },
+  })
+
+  if (!transfer) {
+    return { success: false, error: 'Transfer bulunamadı.' }
+  }
+
+  await prisma.employeeAdvanceTransfer.delete({ where: { id } })
+
+  await logAudit({
+    entityType: 'ADVANCE_TRANSFER',
+    entityId: id,
+    actionType: 'DELETE',
+    oldValues: {
+      amount: transfer.amount,
+      date: transfer.date,
+      note: transfer.note,
+      receiverId: transfer.receiverId,
+      sentById: transfer.sentById,
+      sourceAccountId: transfer.sourceAccountId,
+    },
+    performedById: me.id,
+  })
+
+  revalidatePath('/advances')
+  revalidatePath(`/admin/users/${transfer.receiverId}`)
+  revalidatePath('/admin/users')
+
+  return { success: true, data: { id } }
+}
 
 export async function createAdvanceReturn(
   raw: unknown,
