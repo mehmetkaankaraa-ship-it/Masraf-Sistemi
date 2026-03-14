@@ -3,6 +3,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* iPhone safe area support */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
 @layer base {
   :root {
     /* Off-white page background — warm tint like Stripe/Linear */

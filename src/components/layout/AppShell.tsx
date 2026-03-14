@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { BottomNav } from './BottomNav'
 import { Toaster } from '@/components/ui/toaster'
 import type { Role } from '@prisma/client'
 
@@ -37,11 +38,13 @@ export function AppShell({ role, user, unreadCount = 0, children }: AppShellProp
           unreadCount={unreadCount}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-5">
+        {/* pb-16 on mobile: reserves space for the fixed bottom nav */}
+        <main className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-5 pb-20 lg:pb-5">
           {children}
         </main>
       </div>
 
+      <BottomNav role={role} />
       <Toaster />
     </div>
   )
