@@ -34,3 +34,8 @@ Thumbs.db
 
 .vercel
 .env*.local
+
+# Capacitor
+ios/
+android/
+out/
