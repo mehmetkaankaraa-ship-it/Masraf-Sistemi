@@ -26,11 +26,11 @@ export function EditAdvanceButton({ id, defaultAmount, defaultDate, defaultNote,
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
   const [accounts, setAccounts] = useState<SourceAccount[]>([])
-  const [sourceAccountId, setSourceAccountId] = useState(defaultSourceAccountId ?? '')
+  const [sourceAccountId, setSourceAccountId] = useState(defaultSourceAccountId ?? '__none__')
 
   useEffect(() => {
     if (open) {
-      setSourceAccountId(defaultSourceAccountId ?? '')
+      setSourceAccountId(defaultSourceAccountId ?? '__none__')
       listSourceAccounts(false).then(setAccounts).catch(() => setAccounts([]))
     }
   }, [open, defaultSourceAccountId])
@@ -45,7 +45,7 @@ export function EditAdvanceButton({ id, defaultAmount, defaultDate, defaultNote,
         amount:          fd.get('amount'),
         date:            fd.get('date'),
         note:            fd.get('note') || null,
-        sourceAccountId: sourceAccountId || null,
+        sourceAccountId: sourceAccountId === '__none__' ? null : sourceAccountId || null,
       })
 
       if (!result.success) {
@@ -119,7 +119,7 @@ export function EditAdvanceButton({ id, defaultAmount, defaultDate, defaultNote,
                   <SelectValue placeholder="Hesap seçin (opsiyonel)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— Yok —</SelectItem>
+                  <SelectItem value="__none__">— Yok —</SelectItem>
                   {accounts.map((acc) => (
                     <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
                   ))}
