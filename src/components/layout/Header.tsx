@@ -46,7 +46,7 @@ export function Header({ user, unreadCount = 0, onMenuClick }: HeaderProps) {
 
       <header
         className="h-[52px] bg-white flex items-center gap-2 px-3 md:px-4 shrink-0"
-        style={{ borderBottom: '1px solid hsl(var(--border))' }}
+        style={{ borderBottom: '1px solid hsl(231 20% 88%)' }}
       >
         {/* Hamburger — mobile only (lg: hidden) */}
         <button

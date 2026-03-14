@@ -131,12 +131,20 @@ function NavItem({
       href={href}
       onClick={onClick}
       className={[
-        'flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-colors duration-100',
+        'relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-colors duration-100',
         active
-          ? 'bg-white/10 text-white'
+          ? 'text-white'
           : 'text-white/50 hover:text-white/85 hover:bg-white/[0.06]',
       ].join(' ')}
+      style={active ? { backgroundColor: 'hsl(219 100% 55% / 0.18)' } : undefined}
     >
+      {/* Electric Blue left-border indicator for active item */}
+      {active && (
+        <span
+          className="absolute left-0 inset-y-1 w-[3px] rounded-r-full"
+          style={{ backgroundColor: 'hsl(219 100% 55%)' }}
+        />
+      )}
       <Icon
         className={[
           'h-[15px] w-[15px] shrink-0 transition-opacity',
