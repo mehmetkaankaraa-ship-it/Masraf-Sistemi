@@ -30,23 +30,27 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 export default async function ExpenseReportPage({
   searchParams,
 }: {
-  searchParams: { month?: string; userId?: string }
+  searchParams: { from?: string; to?: string; userId?: string; clientId?: string }
 }) {
   const me = await requireCurrentUser()
   const isAdmin = me.role === 'ADMIN'
 
-  const month = searchParams.month ?? ''
+  const from      = searchParams.from     ?? ''
+  const to        = searchParams.to       ?? ''
+  const clientId  = searchParams.clientId ?? ''
   const filterUserId = isAdmin ? (searchParams.userId ?? '') : me.id
 
   const where: any = { type: 'EXPENSE' }
   if (filterUserId) where.createdById = filterUserId
+  if (clientId)     where.clientId    = clientId
 
-  if (month) {
-    const [year, mon] = month.split('-').map(Number)
-    where.date = { gte: new Date(year, mon - 1, 1), lte: new Date(year, mon, 0) }
+  if (from || to) {
+    where.date = {}
+    if (from) where.date.gte = new Date(from)
+    if (to)   where.date.lte = new Date(to)
   }
 
-  const [expenses, users] = await Promise.all([
+  const [expenses, users, clients] = await Promise.all([
     prisma.ledgerTransaction.findMany({
       where,
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
@@ -60,6 +64,9 @@ export default async function ExpenseReportPage({
     isAdmin
       ? prisma.user.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } })
       : Promise.resolve([]),
+    isAdmin
+      ? prisma.client.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } })
+      : Promise.resolve([]),
   ])
 
   const total = expenses.reduce((acc, tx) => acc + Number(tx.amount), 0)
@@ -67,57 +74,117 @@ export default async function ExpenseReportPage({
     .filter((tx) => (tx.status ?? 'APPROVED') === 'APPROVED')
     .reduce((acc, tx) => acc + Number(tx.amount), 0)
 
-  const reportTitle = month
-    ? `Gider Raporu — ${new Date(month + '-01').toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}`
-    : 'Gider Raporu'
+  // Rapor başlığı için tarih aralığı metni
+  let dateLabel = ''
+  if (from && to)   dateLabel = `${fmtDate(from)} – ${fmtDate(to)}`
+  else if (from)    dateLabel = `${fmtDate(from)} sonrası`
+  else if (to)      dateLabel = `${fmtDate(to)} öncesi`
+
+  const reportTitle = dateLabel ? `Gider Raporu — ${dateLabel}` : 'Gider Raporu'
 
   const filterName = filterUserId
     ? expenses[0]?.createdBy?.name ?? users.find((u) => u.id === filterUserId)?.name ?? ''
     : 'Tüm Çalışanlar'
 
+  const clientName = clientId
+    ? clients.find((c) => c.id === clientId)?.name ?? ''
+    : ''
+
   return (
     <div className="max-w-[900px] space-y-4">
-      {/* Controls (hidden on print) */}
+      {/* Kontroller (yazdırmada gizli) */}
       <div className="flex items-center justify-between print:hidden">
         <div>
           <h1 className="text-lg font-semibold">Gider Raporu</h1>
           <p className="text-[13px] text-muted-foreground mt-0.5">{expenses.length} kayıt</p>
         </div>
         <div className="flex items-center gap-2">
-          <form className="flex items-center gap-2">
-            <input
-              type="month"
-              name="month"
-              defaultValue={month}
-              className="h-9 px-3 text-[13px] border rounded-xl outline-none focus:border-primary/60"
-            />
+          <form className="flex flex-wrap items-end gap-2">
+            {/* Tarih aralığı */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-0.5">
+                Başlangıç
+              </label>
+              <input
+                type="date"
+                name="from"
+                defaultValue={from}
+                className="h-9 px-3 text-[13px] border rounded-xl outline-none focus:border-primary/60"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-0.5">
+                Bitiş
+              </label>
+              <input
+                type="date"
+                name="to"
+                defaultValue={to}
+                className="h-9 px-3 text-[13px] border rounded-xl outline-none focus:border-primary/60"
+              />
+            </div>
+
+            {/* Müvekkil filtresi (sadece admin) */}
             {isAdmin && (
-              <select name="userId" defaultValue={filterUserId}
-                className="h-9 px-3 text-[13px] border rounded-xl outline-none focus:border-primary/60 bg-white">
-                <option value="">Tüm Çalışanlar</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
-                ))}
-              </select>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-0.5">
+                  Müvekkil
+                </label>
+                <select
+                  name="clientId"
+                  defaultValue={clientId}
+                  className="h-9 px-3 text-[13px] border rounded-xl outline-none focus:border-primary/60 bg-white"
+                >
+                  <option value="">Tüm Müvekkiller</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
             )}
-            <button type="submit"
-              className="h-9 px-4 text-[13px] font-medium bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors">
+
+            {/* Çalışan filtresi (sadece admin) */}
+            {isAdmin && (
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-0.5">
+                  Çalışan
+                </label>
+                <select
+                  name="userId"
+                  defaultValue={filterUserId}
+                  className="h-9 px-3 text-[13px] border rounded-xl outline-none focus:border-primary/60 bg-white"
+                >
+                  <option value="">Tüm Çalışanlar</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="h-9 px-4 text-[13px] font-medium bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors self-end"
+            >
               Filtrele
             </button>
           </form>
-          <ExcelExportButton month={month} userId={filterUserId} />
+
+          <ExcelExportButton from={from} to={to} userId={filterUserId} clientId={clientId} />
           <PrintButton />
         </div>
       </div>
 
-      {/* Printable report */}
+      {/* Yazdırılabilir rapor */}
       <div className="bg-white rounded-2xl border card-shadow overflow-hidden">
-        {/* Report header */}
+        {/* Rapor başlığı */}
         <div className="px-6 py-5 border-b">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-[17px] font-bold text-foreground">{reportTitle}</h2>
-              <p className="text-[13px] text-muted-foreground mt-1">{filterName}</p>
+              <p className="text-[13px] text-muted-foreground mt-1">
+                {filterName}{clientName ? ` · ${clientName}` : ''}
+              </p>
             </div>
             <div className="text-right">
               <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Rapor Tarihi</p>
@@ -125,7 +192,7 @@ export default async function ExpenseReportPage({
             </div>
           </div>
 
-          {/* Summary row */}
+          {/* Özet satırı */}
           <div className="flex items-center gap-6 mt-4 pt-4 border-t">
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Toplam Gider</p>
@@ -142,10 +209,10 @@ export default async function ExpenseReportPage({
           </div>
         </div>
 
-        {/* Table */}
+        {/* Tablo */}
         {expenses.length === 0 ? (
           <div className="py-12 text-center text-[13px] text-muted-foreground">
-            Bu dönemde gider kaydı bulunamadı.
+            Bu kriterlere uygun gider kaydı bulunamadı.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -200,7 +267,7 @@ export default async function ExpenseReportPage({
           </div>
         )}
 
-        {/* Signature area */}
+        {/* İmza alanı */}
         <div className="px-6 py-6 border-t mt-2">
           <div className="flex items-end justify-between">
             <div className="text-[11px] text-muted-foreground">

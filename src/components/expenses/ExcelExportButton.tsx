@@ -3,15 +3,19 @@
 import { FileSpreadsheet } from 'lucide-react'
 
 type Props = {
-  month?: string
+  from?: string
+  to?: string
   userId?: string
+  clientId?: string
 }
 
-export function ExcelExportButton({ month, userId }: Props) {
+export function ExcelExportButton({ from, to, userId, clientId }: Props) {
   function handleClick() {
     const params = new URLSearchParams()
-    if (month) params.set('month', month)
-    if (userId) params.set('userId', userId)
+    if (from)     params.set('from', from)
+    if (to)       params.set('to', to)
+    if (userId)   params.set('userId', userId)
+    if (clientId) params.set('clientId', clientId)
     const url = `/api/reports/expenses?${params.toString()}`
     window.location.href = url
   }
