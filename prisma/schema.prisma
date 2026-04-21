@@ -65,8 +65,9 @@ model User {
   name         String
   passwordHash String
   role         Role      @default(USER)
-  isActive     Boolean   @default(true)
-  lastActiveAt DateTime?
+  isActive       Boolean   @default(true)
+  deactivatedAt  DateTime?
+  lastActiveAt   DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -77,6 +78,8 @@ model User {
   receivedTransfers    LedgerTransaction[]          @relation("ReceivedTransfers")
   advancesReceived     EmployeeAdvanceTransfer[]    @relation("AdvanceReceiver")
   advancesSent         EmployeeAdvanceTransfer[]    @relation("AdvanceSender")
+  advanceReturns       AdvanceReturn[]              @relation("AdvanceReturner")
+  recordedReturns      AdvanceReturn[]              @relation("ReturnRecorder")
   approvedTransactions LedgerTransaction[]          @relation("ApprovedTransactions")
   notifications        Notification[]
 
@@ -258,6 +261,29 @@ model Notification {
   @@index([userId])
   @@index([userId, read])
   @@index([createdAt])
+}
+
+/// Advance money returned by employee to office
+model AdvanceReturn {
+  id        String   @id @default(cuid())
+  amount    Decimal  @db.Decimal(18, 4)
+  currency  String   @default("TRY")
+  date      DateTime @db.Date
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Employee who is returning the advance
+  employeeId   String
+  employee     User   @relation("AdvanceReturner", fields: [employeeId], references: [id])
+
+  /// Admin who recorded the return
+  recordedById String
+  recordedBy   User   @relation("ReturnRecorder", fields: [recordedById], references: [id])
+
+  @@index([employeeId])
+  @@index([recordedById])
+  @@index([date])
 }
 
 /// Advance money sent from office to an employee

@@ -1,0 +1,90 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#080D24"/>
+      <stop offset="100%" stop-color="#03060E"/>
+    </linearGradient>
+    <radialGradient id="amb" cx="42%" cy="52%" r="52%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1A52D2" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#1A52D2" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="barG" x1="0" y1="196" x2="0" y2="844" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#2468EE" stop-opacity="0.45"/>
+      <stop offset="35%"  stop-color="#2468EE"/>
+      <stop offset="100%" stop-color="#0E2480" stop-opacity="0.7"/>
+    </linearGradient>
+    <linearGradient id="r1" x1="178" y1="512" x2="940" y2="443" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#2468EE"/>
+      <stop offset="35%"  stop-color="#3A7AFF"/>
+      <stop offset="70%"  stop-color="#6AABFF" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#A0CCFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="r2" x1="178" y1="512" x2="895" y2="496" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#1A52D2" stop-opacity="0.65"/>
+      <stop offset="55%"  stop-color="#3A7AFF" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#90BBFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="r3" x1="178" y1="512" x2="820" y2="568" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#1A52D2" stop-opacity="0.3"/>
+      <stop offset="60%"  stop-color="#2A64E8" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#70A0FF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="dotG" x1="150" y1="484" x2="206" y2="540" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#80B8FF"/>
+      <stop offset="100%" stop-color="#2468EE"/>
+    </linearGradient>
+    <linearGradient id="karaG" x1="166" y1="664" x2="790" y2="756" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"  stop-color="#4A88FF"/>
+      <stop offset="55%" stop-color="#2468EE"/>
+      <stop offset="100%" stop-color="#1A40C0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- iOS rounded rect background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg1)"/>
+  <rect width="1024" height="1024" rx="224" fill="url(#amb)"/>
+
+  <!-- Dikey bar -->
+  <rect x="102" y="196" width="27" height="648" rx="13.5" fill="url(#barG)"/>
+
+  <!-- Origin dot -->
+  <circle cx="178" cy="512" r="40" fill="#1A52D2" fill-opacity="0.18"/>
+  <circle cx="178" cy="512" r="20" fill="url(#dotG)"/>
+  <circle cx="178" cy="512" r="7"  fill="#C0DAFF"/>
+
+  <!-- Ana huzme -->
+  <path d="M178 512 L950 410" stroke="url(#r1)" stroke-width="11" stroke-linecap="round"/>
+  <!-- Orta huzme -->
+  <path d="M178 512 L905 494" stroke="url(#r2)" stroke-width="5" stroke-linecap="round"/>
+  <!-- Alt ince -->
+  <path d="M178 512 L836 568" stroke="url(#r3)" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- IŞIK -->
+  <text x="166" y="462"
+    font-family="'Syne','Arial Black',sans-serif"
+    font-weight="800"
+    font-size="206"
+    letter-spacing="6"
+    fill="#EEF2FF">IŞIK</text>
+
+  <!-- KARA -->
+  <text x="166" y="688"
+    font-family="'Syne','Arial Black',sans-serif"
+    font-weight="800"
+    font-size="206"
+    letter-spacing="6"
+    fill="url(#karaG)">KARA</text>
+
+  <!-- Kural çizgisi -->
+  <line x1="166" y1="716" x2="862" y2="716" stroke="#1A52D2" stroke-width="1.8" stroke-opacity="0.3"/>
+
+  <!-- Alt yazı -->
+  <text x="168" y="782"
+    font-family="'DM Sans','Arial',sans-serif"
+    font-weight="300"
+    font-size="44"
+    letter-spacing="15"
+    fill="#7A9FD4"
+    fill-opacity="0.85">AVUKATLIK ORTAKLIĞI</text>
+
+</svg>

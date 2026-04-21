@@ -3,48 +3,62 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* iPhone safe area support */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
 @layer base {
   :root {
-    /* Off-white page background — warm tint like Stripe/Linear */
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
+    /* Brand: navy-tinted page background */
+    --background: 231 25% 97%;
+    --foreground: 231 55% 10%;
 
     /* Pure white cards */
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card-foreground: 231 55% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover-foreground: 231 55% 10%;
 
-    /* Primary: deep indigo-slate (professional) */
-    --primary: 226 57% 21%;
-    --primary-foreground: 210 40% 98%;
+    /* Brand primary: Electric Blue #1A6BFF */
+    --primary: 219 100% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 94%;
-    --secondary-foreground: 220 25% 20%;
+    --secondary: 231 20% 93%;
+    --secondary-foreground: 231 40% 20%;
 
-    --muted: 220 16% 95%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 231 18% 94%;
+    --muted-foreground: 231 15% 48%;
 
-    --accent: 220 16% 92%;
-    --accent-foreground: 220 25% 12%;
+    --accent: 231 18% 92%;
+    --accent-foreground: 231 55% 10%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Subtle borders */
-    --border: 220 18% 90%;
-    --input: 220 18% 90%;
-    --ring: 226 57% 21%;
+    /* Navy-tinted borders */
+    --border: 231 20% 88%;
+    --input: 231 20% 88%;
+    --ring: 219 100% 55%;
     --radius: 0.625rem;
 
-    /* Custom tokens for sidebar */
-    --sidebar-bg: 226 30% 14%;
-    --sidebar-fg: 220 20% 75%;
-    --sidebar-active-bg: 226 40% 22%;
+    /* Sidebar: Midnight Navy #0A0F2C */
+    --sidebar-bg: 231 63% 8%;
+    --sidebar-fg: 229 40% 70%;
+    --sidebar-active-bg: 219 100% 55%;
     --sidebar-active-fg: 0 0% 100%;
-    --sidebar-hover-bg: 226 30% 18%;
-    --sidebar-border: 226 25% 20%;
+    --sidebar-hover-bg: 231 50% 13%;
+    --sidebar-border: 231 45% 13%;
+
+    /* Brand accent tokens */
+    --gold-accent: 44 54% 54%;
+    --primary-light: 214 100% 67%;
   }
 }
 
@@ -74,12 +88,12 @@
   background: hsl(220 18% 70%);
 }
 
-/* Card shadow utility */
+/* Card shadow utility — navy-tinted */
 .card-shadow {
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  box-shadow: 0 1px 3px 0 rgb(10 15 44 / 0.06), 0 1px 2px -1px rgb(10 15 44 / 0.04);
 }
 .card-shadow-md {
-  box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  box-shadow: 0 4px 12px 0 rgb(10 15 44 / 0.08), 0 2px 4px -2px rgb(10 15 44 / 0.05);
 }
 
 /* ── Print: hide chrome, show only document ── */

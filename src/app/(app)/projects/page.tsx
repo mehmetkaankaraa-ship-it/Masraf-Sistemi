@@ -88,9 +88,11 @@ function ProjectRow({ project }: { project: any }) {
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded shrink-0">
-              {project.fileNo}
-            </span>
+            {!/^PRJ-\d{8}-\d{6}$/.test(project.fileNo) && (
+              <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded shrink-0">
+                {project.fileNo}
+              </span>
+            )}
             <p className="text-[13px] font-medium text-foreground truncate group-hover:text-primary transition-colors">
               {project.title}
             </p>

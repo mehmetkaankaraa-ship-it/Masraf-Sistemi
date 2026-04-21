@@ -10,7 +10,8 @@ import {
   ArrowLeft, Banknote, Receipt, Wallet,
   Users, Hash, TrendingUp, TrendingDown, Activity, ArrowDownLeft,
 } from 'lucide-react'
-import { SendAdvanceModal } from '@/components/advances/SendAdvanceModal'
+import { SendAdvanceModal }           from '@/components/advances/SendAdvanceModal'
+import { RecordAdvanceReturnModal }   from '@/components/advances/RecordAdvanceReturnModal'
 
 type PageProps = { params: { id: string } }
 
@@ -25,7 +26,7 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
   const detail = await getEmployeeDetail(params.id)
   if (!detail) notFound()
 
-  const { user, transfers, expenses, balance, clientBreakdown } = detail
+  const { user, transfers, expenses, advanceReturns, balance, clientBreakdown } = detail
   const balanceNum = balance.remaining.toNumber()
 
   return (
@@ -54,7 +55,10 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
               </p>
             </div>
           </div>
-          <SendAdvanceModal employeeId={user.id} employeeName={user.name} />
+          <div className="flex items-center gap-2">
+            <RecordAdvanceReturnModal employeeId={user.id} employeeName={user.name} />
+            <SendAdvanceModal employeeId={user.id} employeeName={user.name} />
+          </div>
         </div>
       </div>
 
@@ -93,7 +97,7 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
           </div>
           <p className="text-[11px] text-white/70 uppercase tracking-wide font-medium mb-1">Kalan Bakiye</p>
           <p className="text-xl font-bold text-white tabular-nums">{formatTRY(balance.remaining)}</p>
-          <p className="text-[11px] text-white/60 mt-1">avans - harcama</p>
+          <p className="text-[11px] text-white/60 mt-1">avans - harcama - iade</p>
         </div>
 
         <div className="bg-white rounded-2xl border card-shadow p-5">
@@ -111,7 +115,7 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
       </div>
 
       {/* Bottom grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr_300px] gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr_1fr_280px] gap-5">
 
         {/* Transfers */}
         <div className="bg-white rounded-2xl border card-shadow overflow-hidden">
@@ -159,6 +163,31 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
                     <p className="text-[11px] text-muted-foreground">{format(new Date(tx.date), 'dd.MM.yyyy')}{tx.description ? ' - ' + tx.description : ''}</p>
                   </div>
                   <span className="text-[13px] font-semibold text-orange-600 tabular-nums shrink-0 ml-3">-{formatTRY(tx.amount)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Advance Returns */}
+        <div className="bg-white rounded-2xl border card-shadow overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3.5 border-b">
+            <ArrowDownLeft className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-[13px] font-semibold">Avans İadeleri</h2>
+            <span className="ml-auto text-[11px] text-muted-foreground">{advanceReturns.length} kayıt</span>
+          </div>
+          {advanceReturns.length === 0 ? (
+            <div className="px-5 py-10 text-center text-[13px] text-muted-foreground">İade kaydı yok.</div>
+          ) : (
+            <div className="divide-y divide-border/60 max-h-[400px] overflow-y-auto">
+              {advanceReturns.map((r) => (
+                <div key={r.id} className="flex items-start justify-between px-5 py-3 hover:bg-muted/15 transition-colors">
+                  <div>
+                    <p className="text-[12px] font-medium text-foreground">{r.recordedBy.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{format(new Date(r.date), 'dd.MM.yyyy')}</p>
+                    {r.note && <p className="text-[10px] text-muted-foreground/70 mt-0.5 italic">{r.note}</p>}
+                  </div>
+                  <span className="text-[13px] font-semibold text-emerald-600 tabular-nums shrink-0 ml-3">-{formatTRY(r.amount)}</span>
                 </div>
               ))}
             </div>
